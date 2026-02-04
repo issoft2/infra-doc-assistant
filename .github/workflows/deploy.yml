@@ -34,11 +34,13 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          envs: BACKEND_ENV,DOCKER_USERNAME
           script: |
             set -e
             cd /srv/company-assistant
