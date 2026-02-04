@@ -1,20 +1,19 @@
 name: Deploy Full-Stack to DigitalOcean Droplet
 
 on:
-  workflow_run:
-    workflows: ["Build & Push Backend Docker (Docker Hub)", "Build & Push Frontend Docker Image"]
-    types:
-      - completed
+  repository_dispatch:
+    types: [deploy_trigger]
+  workflow_dispatch:
+ 
   push:
     branches: [ main ]
-
-permissions:
-  contents: read
+    paths:
+      - 'docker-compose-production.yml'
+      - 'nginx/**'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
     steps:
       - name: Checkout repo
@@ -54,13 +53,15 @@ jobs:
             mkdir -p data nginx
 
             # 3. Setup Env
-            echo "$BACKEND_ENV" >> .env
+            echo "$BACKEND_ENV" > .env
             chmod 600 .env
 
             # 4. Pull and Up
-            docker compose -f docker-compose-production.yml pull
+            docker compose -f docker-compose-production.yml pull --quiet
             docker compose -f docker-compose-production.yml up -d --remove-orphans
-
+            
+            docker image prune -f
+            
             echo "Waiting 15s for start..."
             sleep 15
 
