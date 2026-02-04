@@ -2,9 +2,9 @@ version: "3.9"
 
 services:
   backend:
-    image: specisaac/company-assistant-backend:latest
+    image: ${DOCKER_USERNAME}/company-assistant-backend:latest
     pull_policy: always
-    env_file: ./backend/.env
+    env_file: ./.env
     # We keep 8000 for direct access, but Nginx uses the internal app_net
     expose:
       - "8000"
@@ -33,7 +33,7 @@ services:
 
   frontend:
     build: ./frontend
-    image: specisaac/company-assistant-frontend:latest
+    image: ${DOCKER_USERNAME}/company-assistant-frontend:latest
     networks:
       - app_net
     restart: unless-stopped
@@ -68,7 +68,7 @@ services:
           memory: 64M
 
 volumes:
-  name: company_assistant_vector_store
+  chroma_data:
 
 networks:
   app_net:
