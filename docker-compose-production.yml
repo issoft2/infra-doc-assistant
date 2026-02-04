@@ -32,7 +32,6 @@ services:
       start_period: 40s # Increased to give ChromaDB/Uvicorn more time
 
   frontend:
-    build: ./frontend
     image: ${DOCKER_USERNAME}/company-assistant-frontend:latest
     networks:
       - app_net
