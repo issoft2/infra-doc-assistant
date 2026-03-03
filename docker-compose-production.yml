@@ -9,7 +9,7 @@ services:
     expose:
       - "8000"
     environment:
-      APP_RESET_DATA: "True"  
+      APP_RESET_DATA: "False"  
     volumes:
       - chroma_data:/app/chromadb_multi_tenant
       - ./data:/app/data
