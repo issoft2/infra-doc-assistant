@@ -8,6 +8,8 @@ services:
     # We keep 8000 for direct access, but Nginx uses the internal app_net
     expose:
       - "8000"
+    environment:
+      - APP_RESET_DATA: "True"  
     volumes:
       - chroma_data:/app/chromadb_multi_tenant
       - ./data:/app/data
