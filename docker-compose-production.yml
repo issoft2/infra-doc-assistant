@@ -1,37 +1,59 @@
 version: "3.9"
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: company-assistant-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    networks:
+      - app_net
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   backend:
     image: ${DOCKER_USERNAME}/company-assistant-backend:latest
     pull_policy: always
     env_file: ./.env
-    # We keep 8000 for direct access, but Nginx uses the internal app_net
     expose:
       - "8000"
     environment:
-      APP_RESET_DATA: "False"  
+      APP_RESET_DATA: "False"
+      REDIS_URL: "redis://redis:6379/0"   # ← points to redis service by name
     volumes:
       - chroma_data:/app/chromadb_multi_tenant
       - ./data:/app/data
     restart: unless-stopped
     networks:
       - app_net
-
+    depends_on:
+      redis:                               # ← wait for redis to be healthy
+        condition: service_healthy
     deploy:
       resources:
-         limits:
-            memory: 1200M
-         reservations:
-            memory: 512M       
-
-    # This tells Docker how to check if the backend is actually ready.
+        limits:
+          memory: 1200M
+        reservations:
+          memory: 512M
     healthcheck:
-      # This uses a bash socket check—no curl required!
       test: ["CMD-SHELL", "timeout 1s bash -c ':> /dev/tcp/127.0.0.1/8000' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s # Increased to give ChromaDB/Uvicorn more time
+      start_period: 40s
 
   frontend:
     image: ${DOCKER_USERNAME}/company-assistant-frontend:latest
@@ -41,7 +63,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M 
+          memory: 256M
 
   nginx:
     image: nginx:alpine
@@ -49,7 +71,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    # --- REFINEMENT: Condition-based dependency ---
     depends_on:
       backend:
         condition: service_healthy
@@ -70,6 +91,7 @@ services:
 
 volumes:
   chroma_data:
+  redis_data:        # ← persist redis data across restarts
 
 networks:
   app_net:
